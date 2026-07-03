@@ -1,0 +1,69 @@
+---
+title: "Install Canvas Card-Materializer in Obsidian"
+sidebarTitle: "Installation"
+description: "Install Canvas Card-Materializer from the Obsidian Community Plugins browser or manually via GitHub Releases — step-by-step setup guide."
+---
+
+Canvas Card-Materializer can be installed in two ways: directly from the **Obsidian Community Plugins browser** (the quickest route once the plugin is officially listed) or **manually** by downloading the release assets from GitHub and placing them in your vault's plugin folder. Both methods produce an identical result — choose whichever fits your workflow.
+
+<Note>
+  Canvas Card-Materializer requires **Obsidian 1.4.0 or higher**. Check your current version in **Settings → About** before installing.
+</Note>
+
+<Tabs>
+  <Tab title="Community Plugins">
+    <Warning>
+      Obsidian's **Restricted Mode** must be disabled before you can install or enable any community plugin, including Canvas Card-Materializer. Restricted Mode blocks all third-party code from running; disabling it is required to proceed.
+    </Warning>
+
+    <Steps>
+      <Step title="Open Obsidian Settings">
+        Click the gear icon in the bottom-left corner of Obsidian, or press `Ctrl+,` (Windows / Linux) / `Cmd+,` (macOS) to open the **Settings** panel.
+      </Step>
+      <Step title="Navigate to Community Plugins">
+        In the left sidebar of Settings, scroll down and click **Community plugins**.
+      </Step>
+      <Step title="Disable Restricted Mode">
+        If the **Restricted mode** toggle is on, click **Turn on community plugins** (or toggle the switch off). Confirm the prompt that appears. Restricted Mode is now disabled.
+      </Step>
+      <Step title="Search for Canvas Card-Materializer">
+        Click the **Browse** button next to "Community plugins". In the search bar that appears, type `Canvas Card-Materializer`. The plugin by **redsheep913** will appear in the results.
+      </Step>
+      <Step title="Install and Enable">
+        Click the plugin entry to open its detail page, then click **Install**. Once installation completes, click **Enable** to activate it immediately. You will see a confirmation notice in Obsidian.
+      </Step>
+    </Steps>
+  </Tab>
+
+  <Tab title="Manual Install">
+    <Steps>
+      <Step title="Download the latest release">
+        Go to the GitHub Releases page at [https://github.com/redsheep913/Canvas-Card-Materializer/releases](https://github.com/redsheep913/Canvas-Card-Materializer/releases). Under the most recent release, download both **`main.js`** and **`manifest.json`** from the **Assets** section.
+      </Step>
+      <Step title="Create the plugin folder">
+        Inside your Obsidian vault, create the following folder path if it does not already exist:
+
+        ```text
+        .obsidian/plugins/canvas-card-materializer/
+        ```
+
+        On most operating systems the `.obsidian` folder is hidden by default — enable "Show hidden files" in your file manager to see it.
+      </Step>
+      <Step title="Place the downloaded files">
+        Move (or copy) the two downloaded files — `main.js` and `manifest.json` — into the folder you just created:
+
+        ```text
+        .obsidian/plugins/canvas-card-materializer/
+        ├── main.js
+        └── manifest.json
+        ```
+      </Step>
+      <Step title="Reload Obsidian">
+        Restart Obsidian completely, or run the **Reload app without saving** command from the Command Palette (`Ctrl+P` / `Cmd+P`) to make Obsidian detect the new plugin files.
+      </Step>
+      <Step title="Enable the plugin">
+        Open **Settings → Community plugins**. If Restricted Mode is still on, disable it first (see the warning above). Scroll through the **Installed plugins** list, find **Canvas Card-Materializer**, and toggle it on. The plugin is now active.
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>

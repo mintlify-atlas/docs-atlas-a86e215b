@@ -1,0 +1,74 @@
+---
+title: "Color Hierarchy: Automatic Folder Organization by Card Color"
+sidebarTitle: "Color Hierarchy"
+description: "Canvas Card-Materializer maps each card's color code to a named sub-folder, automatically routing materialized notes into an organized directory structure."
+---
+
+Every Obsidian Canvas card carries an optional `color` property — an integer string from `"0"` to `"6"` that controls the card's visual tint in the canvas UI. Canvas Card-Materializer reads this property at materialization time and uses it to automatically route the generated `.md` file into a named sub-folder, giving your vault a consistent, color-coded directory structure with zero manual filing.
+
+## Color-to-Folder Mapping
+
+The plugin's `colorFolderMap` in `main.ts` defines the following routing table:
+
+| Color Code | Canvas Color | Folder Name |
+|:---:|:---:|:---|
+| `"0"` | Grey (no color) | `Default` |
+| `"1"` | Red | `Red` |
+| `"2"` | Orange | `Orange` |
+| `"3"` | Yellow | `Yellow` |
+| `"4"` | Blue | `Blue` |
+| `"5"` | Green | `Green` |
+| `"6"` | Purple | `Purple` |
+
+These folder names are created on demand — the plugin calls `ensureFolderExists()` before writing each file, so only folders that are actually needed are created in your vault.
+
+## Folder Path Formula
+
+Every materialized file lands at:
+
+```
+<canvas-parent-dir>/<canvas-name>/<ColorFolder>/<filename>.md
+```
+
+| Segment | Source |
+|:---|:---|
+| `<canvas-parent-dir>` | The directory containing the `.canvas` file |
+| `<canvas-name>` | The basename of the `.canvas` file (no extension) |
+| `<ColorFolder>` | The folder name from `colorFolderMap` matching the node's `color` value |
+| `<filename>.md` | The sanitized, truncated first line of the card's text |
+
+## Concrete Example
+
+Suppose you have a canvas at `Documents/Project-ASR.canvas` and you materialize a yellow card (`color: "3"`) whose first line reads `Sprint Goals`.
+
+The plugin resolves:
+- `<canvas-parent-dir>` → `Documents`
+- `<canvas-name>` → `Project-ASR`
+- `<ColorFolder>` → `Yellow` (because color code `"3"` maps to `Yellow`)
+- `<filename>` → `Sprint Goals`
+
+The resulting file is created at:
+
+```
+Documents/Project-ASR/Yellow/Sprint Goals.md
+```
+
+A red card (`color: "1"`) from the same canvas named `Blockers` would land at:
+
+```
+Documents/Project-ASR/Red/Blockers.md
+```
+
+And an uncolored card would go to:
+
+```
+Documents/Project-ASR/Default/<filename>.md
+```
+
+<Note>
+If a card has no `color` property set, the plugin defaults to color code `"0"`, routing the file into the `Default` sub-folder. This ensures every materialized note always has a well-defined home, even if you haven't assigned colors to your cards.
+</Note>
+
+<Tip>
+For a recommended semantic color scheme — for example, using Red for blockers, Green for completed items, and Yellow for in-progress work — see [Color Workflow](/configuration/color-workflow). A consistent color convention makes the generated folder structure an intuitive project dashboard.
+</Tip>

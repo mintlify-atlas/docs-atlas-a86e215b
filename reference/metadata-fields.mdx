@@ -1,0 +1,54 @@
+---
+title: "YAML Frontmatter Fields Written by Canvas Card-Materializer"
+sidebarTitle: "Metadata Fields"
+description: "Reference for the YAML frontmatter fields canvas_id and canvas_color that Canvas Card-Materializer writes to every materialized Markdown file."
+---
+
+Every file created by Canvas Card-Materializer receives two YAML frontmatter fields that link the note back to its origin on the Canvas. These fields are used internally for Visual Sync and can also be queried with Dataview or other Obsidian plugins.
+
+## Fields
+
+<ResponseField name="canvas_id" type="string" required>
+  The unique node ID assigned by Obsidian Canvas to the original text node. This is the string that Canvas uses internally to reference the node in the `.canvas` JSON file. It is written directly from `node.id` during Pass 3 of materialization.
+
+  **Example:** `abc123def456`
+</ResponseField>
+
+<ResponseField name="canvas_color" type="string (numeric string, &quot;0&quot; – &quot;6&quot;)" required>
+  The color code of the card at the time of materialization. Used by Visual Sync to restore the card color when the file is dragged back onto a Canvas. The value is coerced to a string via `String(node.color)` before being stored, and defaults to `"0"` if the card has no color set.
+
+  **Example:** `"3"` (Yellow)
+</ResponseField>
+
+## Example Frontmatter Block
+
+```yaml
+---
+canvas_id: abc123def456
+canvas_color: "3"
+---
+```
+
+<Note>
+  `canvas_color` is stored as a string (e.g., `"3"`) even though it corresponds to an integer color code. This matches how Obsidian Canvas stores colors internally, and ensures the value round-trips correctly when Visual Sync reads it back with `String(savedColor)` to restore the card color.
+</Note>
+
+## Querying Materialized Notes with Dataview
+
+<Tip>
+  You can query all materialized notes from a specific Canvas using Dataview:
+
+  ````text
+  ```dataview
+  TABLE canvas_color AS "Color", canvas_id AS "Node ID"
+  FROM ""
+  WHERE canvas_id != null
+  ```
+  ````
+</Tip>
+
+## How These Fields Are Written
+
+<Note>
+  The plugin uses `app.fileManager.processFrontMatter()` to write these fields, which means they are written safely without corrupting existing frontmatter. This Obsidian API handles YAML parsing and serialization internally, so any pre-existing fields in the file are preserved untouched.
+</Note>

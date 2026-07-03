@@ -1,47 +1,74 @@
 ---
-title: "Quickstart"
-description: "Begin with a guide on the fastest path to a successful outcome"
+title: "Get Started with Canvas Card-Materializer"
+sidebarTitle: "Quickstart"
+description: "Materialize your first Obsidian Canvas cards into organized Markdown files in under a minute with Canvas Card-Materializer."
 ---
 
-Describe how someone begins using your product. What is the first thing they need to do? Are there any prerequisites?
-
-A quickstart should take someone from zero to using your product. They'll get a quick win and a sense of what they can accomplish.
-
-## Prerequisites
-
-Before you begin, you must have:
-
-- Requirement one (for example, Node.js 18+, a free account, an API key)
-- Requirement two (for example, a compatible device, a compatible browser, a compatible operating system)
-
-## Get started
+Once Canvas Card-Materializer is installed and enabled, turning your Canvas brainstorm into a structured set of Markdown notes takes only a few clicks. This guide walks you through the entire workflow — from opening a Canvas file to reading the connected-node backlinks inside your first materialized note.
 
 <Steps>
-  <Step title="Install">
-    Describe how to install your product or sign up.
-
-    ```bash
-    npm install your-package
-    ```
+  <Step title="Open a Canvas file in Obsidian">
+    In the file explorer, open any `.canvas` file. If you don't have one yet, create a new Canvas via **File → New Canvas**. The Canvas editor will open in the main workspace pane.
   </Step>
-  <Step title="Configure">
-    Describe any setup or configuration needed before first use.
-
-    ```bash
-    your-cli init
-    ```
+  <Step title="Create or identify text cards to convert">
+    Add text cards by double-clicking an empty area of the Canvas and typing, or locate existing text cards you want to promote to permanent notes. The plugin works on **text-type nodes** — cards that contain inline text written directly on the Canvas.
   </Step>
-  <Step title="Run it">
-    Show the first thing a user does to see it working.
+  <Step title="Select the cards you want to materialize">
+    - **Single card**: Click the card once to select it. A blue highlight border appears around it.
+    - **Multiple cards**: Hold **Shift** and click additional cards, or click and drag a selection rectangle over a group of cards. All highlighted cards will be materialized together.
+  </Step>
+  <Step title="Right-click and choose Materialize cards to files">
+    With one or more cards selected, **right-click** anywhere on the selection to open the context menu. Click **"Materialize cards to files"**. The plugin immediately begins processing every selected card.
+  </Step>
+  <Step title="Inspect the generated folder structure">
+    A folder named after your Canvas file is created in the **same directory** as the `.canvas` file. Inside it, sub-folders are created for each color present among the materialized cards. Each `.md` file's name is derived from the first line of the card's text (sanitized to remove Markdown headers, backticks, and illegal characters).
 
-    ```bash
-    your-cli start
+    For a canvas file at `Documents/Project-ASR.canvas` with cards of different colors, the output looks like this:
+
+    ```text
+    Documents/
+    └── Project-ASR/
+        ├── Default/
+        │   └── Theory-Note.md
+        ├── Yellow/
+        │   └── Bug-Analysis.md
+        └── Green/
+            └── Command-List.md
     ```
+
+    The original Canvas is updated in-place: every materialized text card is replaced by a **file node** pointing to the new `.md` file, so your visual layout is completely preserved.
+  </Step>
+  <Step title="Open a generated file and inspect its contents">
+    Click any newly created `.md` file in the file explorer. Every materialized file contains:
+
+    - **YAML frontmatter** with `canvas_id` (the node's original Canvas ID) and `canvas_color` (the numeric color code).
+    - The **body text** from the original card (everything after the first line, which became the filename).
+    - A **`Connected Nodes:`** section appended at the bottom — but only if the card had at least one arrow connecting it to another materialized card.
+
+    A typical materialized file looks like this:
+
+    ```markdown
+    ---
+    canvas_id: abc123def456
+    canvas_color: "3"
+    ---
+
+    This is the body text from the original card.
+
+    ---
+    **Connected Nodes:**
+    - [[Related-Note]]
+    - [[Another-Note]]
+    ```
+
+    The `canvas_color` value maps to Canvas's internal color scheme: `"0"` = Default (grey), `"1"` = Red, `"2"` = Orange, `"3"` = Yellow, `"4"` = Blue, `"5"` = Green, `"6"` = Purple.
   </Step>
 </Steps>
 
 <Tip>
-  Give people a way to get help. This could be a link to a support page, a chat with a customer support agent, or a forum for your product.
+  Establishing a consistent color convention before you start materializing pays off quickly. For example: **Yellow** for problems and observations, **Grey (Default)** for abstract theory, **Green** for actionable commands and checklists, and **Purple** for Map-of-Content index notes. See [Color Workflow](/configuration/color-workflow) for the full recommended system and how it maps to folder names.
+</Tip>
 
-  Example: Need help? Reach out to us at [support@yourcompany.com](mailto:support@yourcompany.com).
+<Tip>
+  The `canvas_color` frontmatter written into every materialized file powers the **Visual Sync** feature. If you drag a materialized `.md` file back onto any Canvas — even a different one — the plugin reads `canvas_color` and automatically restores the card's original color, so your color coding is never lost. Learn more at [Visual Sync](/usage/visual-sync).
 </Tip>

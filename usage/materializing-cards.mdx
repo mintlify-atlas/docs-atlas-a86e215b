@@ -1,0 +1,66 @@
+---
+title: "Materializing Canvas Cards into Markdown Files"
+sidebarTitle: "Materializing Cards"
+description: "Step-by-step guide to converting Obsidian Canvas text nodes into permanent Markdown files using Canvas Card-Materializer's right-click context menu."
+---
+
+Materialization is the act of turning a temporary Canvas text card into a permanent Markdown file stored in your vault. You can materialize a single card in isolation or batch-convert an entire selection of cards at once — the plugin processes all of them in a single operation and replaces every text node on the Canvas with a file node pointing to the newly created file.
+
+## Selecting and Materializing
+
+<Tabs>
+  <Tab title="Single Card">
+    1. Click on any text card on your Canvas to select it.
+    2. Right-click the selected card to open the context menu.
+    3. Choose **"Materialize cards to files"**.
+
+    The plugin reads the selected node from `canvas.selection`, creates the Markdown file, and replaces the text node with a file node — all without moving or resizing anything on the Canvas.
+  </Tab>
+  <Tab title="Multiple Cards">
+    1. Hold **Shift** and click each card you want to include, or click and drag across a region to select multiple cards at once.
+    2. Right-click anywhere in the selection to open the context menu.
+    3. Choose **"Materialize cards to files"**.
+
+    The plugin registers both the `canvas:node-menu` event (single node) and the `canvas:selection-menu` event (multi-select), so the **"Materialize cards to files"** menu item appears consistently regardless of how many cards are selected.
+  </Tab>
+</Tabs>
+
+## What Happens After You Click
+
+Once you confirm the action, the plugin runs through four internal passes:
+
+1. **File creation** — For each selected text node, a `.md` file is created inside a folder named after your Canvas, organized into a color sub-folder. The text node on the Canvas is replaced by a file node referencing the new file.
+2. **Edge resolution** — All Canvas arrows (edges) connecting materialized nodes are inspected and resolved into Obsidian wiki-links.
+3. **Frontmatter & backlinks** — Each file receives `canvas_id` and `canvas_color` entries in its YAML frontmatter. If a node had arrows connecting it to other materialized nodes, a **Connected Nodes** section is appended at the bottom of the file with a list of `[[backlinks]]`.
+4. **Canvas update** — The Canvas data is rewritten so that the original text nodes are replaced by file nodes, and a `canvas.requestSave()` call persists the change to disk.
+
+When all passes complete, a success notice appears:
+
+```
+Successfully materialized N nodes!
+```
+
+where `N` is the number of nodes that were processed (including any pre-existing file nodes that were part of the selection).
+
+## How Filenames Are Derived
+
+The filename for each new Markdown file is derived from the **first line** of the card's text content. The derivation follows these rules in order:
+
+| Rule | Detail |
+|---|---|
+| Strip Markdown headers | Leading `#` characters and their trailing space are removed (`/^#+\s*/`) |
+| Strip backticks | All `` ` `` characters are removed |
+| Strip illegal characters | The characters `\ / : " * ? < > \| # ^ [ ]` are removed |
+| Truncate to 50 characters | If the sanitized name exceeds 50 characters, it is trimmed to 50 and trailing whitespace is stripped |
+| Deduplicate with timestamp | If two cards produce the same sanitized filename, a suffix `_YYYYMMDDHHmm_N` is appended to the duplicate (e.g., `My-Note_202506011430_1`) |
+| Fallback | If sanitization produces an empty string, the filename falls back to `Untitled` |
+
+For example, a card whose first line is `## Investigating the Root Cause` becomes the file `Investigating the Root Cause.md`.
+
+<Note>
+  If a selected node is already a **file node** (i.e., it references an existing `.md` file rather than containing raw text), the plugin does not re-create or overwrite the file. The node is still included in connection processing — its edges are resolved and backlinks are written — but the file itself is left untouched.
+</Note>
+
+<Warning>
+  If no valid cards are present in your current selection (for example, you only selected an edge or a group label), the operation is aborted immediately and a notice appears: **"No valid cards selected."** Nothing is written to disk.
+</Warning>

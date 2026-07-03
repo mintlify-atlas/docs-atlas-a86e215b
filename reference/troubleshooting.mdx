@@ -1,0 +1,90 @@
+---
+title: "Troubleshooting Canvas Card-Materializer"
+sidebarTitle: "Troubleshooting"
+description: "Solutions for common issues with Canvas Card-Materializer: no context menu items, files not created, colors not restored, and connection links missing."
+---
+
+Most issues with Canvas Card-Materializer relate to Obsidian's restricted mode, Canvas selection state, or file cache timing. This page covers the most common problems and their solutions.
+
+<AccordionGroup>
+
+  <Accordion title="Materialize cards to files does not appear in the right-click menu">
+    **Cause:** The plugin is disabled, or Obsidian's Restricted Mode is active. Restricted Mode prevents all community plugins from loading, regardless of whether they were previously enabled.
+
+    **Fix:**
+    1. Open **Settings → Community Plugins**.
+    2. Confirm that **Restricted Mode** is toggled **off**.
+    3. Locate **Canvas Card-Materializer** in the installed plugins list and verify the toggle is **enabled**.
+    4. If the plugin was just enabled, reload the affected Canvas tab (close and reopen it) to ensure the context menu event listeners are registered.
+  </Accordion>
+
+  <Accordion title="No valid cards selected notice appears">
+    **Cause:** The current selection contains only file nodes, group nodes, or edges — none of which are text nodes. The plugin filters the Canvas selection with `item.x !== undefined && item.y !== undefined && !item.from`, which passes only positional, non-edge nodes. File nodes that already have an associated `TFile` are handled separately but will not produce new files.
+
+    **Fix:** Make sure to select actual **text cards** (not file cards embedded from the vault, or group boxes). Text cards show editable text content directly on the Canvas surface. You can confirm a card is a text node by double-clicking it — it should open an inline text editor, not a file preview.
+  </Accordion>
+
+  <Accordion title="Files are created but card colors are not restored when dragging back to Canvas">
+    **Cause:** Visual Sync relies on a monkey-patch applied to the Canvas constructor's `addNode` method. This patch is installed the first time a Canvas leaf is detected as open (via `patchCanvasConstructor()`). If no Canvas was open when Obsidian started, the patch is deferred until a Canvas view becomes active via the `layout-change` event listener. In rare cases, the patched `addNode` may not yet be in place when you drag a file onto the Canvas.
+
+    **Fix:**
+    1. Close and reopen the Canvas file, or restart Obsidian entirely. The patch is applied as soon as any Canvas view opens.
+    2. Confirm the patch was applied by checking the developer console (Ctrl+Shift+I) for the log message: `Canvas Card-Materializer: Successfully patched.`
+
+    **Additional check:** Open the materialized file and verify that `canvas_color` is present in its YAML frontmatter. If the field is missing, the Visual Sync listener (`canvas:node:added`) has nothing to read, and the color will not be restored. Re-materializing the card will write the field.
+  </Accordion>
+
+  <Accordion title="Generated filenames are truncated or look wrong">
+    **Cause:** The `sanitizeFileName()` method strips leading `#` heading markers, all backtick characters, and the special characters `\ / : " * ? < > | # ^ [ ]`. The resulting name is then hard-truncated at 50 characters:
+
+    ```typescript
+    let shortName = this.sanitizeFileName(firstLine);
+    if (shortName.length > 50) shortName = shortName.substring(0, 50).trim();
+    ```
+
+    **Expected behavior:** This is intentional. Obsidian and most operating systems impose restrictions on filename characters, and very long filenames are unwieldy as backlink targets. Rename the file after materialization if needed. The `canvas_id` field in the frontmatter still links the file to the original Canvas node regardless of the filename.
+  </Accordion>
+
+  <Accordion title="Connected Nodes section is missing from some files">
+    **Cause:** During Pass 2, the plugin iterates Canvas edges and only records a connection if **both** the source node (`edge.from.node.id`) and the target node (`edge.to.node.id`) are present in the `exportMap` — meaning both cards must have been selected and materialized in the same operation. Arrows pointing to unselected nodes are silently skipped.
+
+    **Fix:** Select all connected cards together before running **Materialize cards to files**. If you have already materialized some cards individually and need to add links retroactively, re-select all the related cards and materialize again. The plugin checks for an existing `**Connected Nodes:**` section before appending, so existing link sections will not be duplicated.
+  </Accordion>
+
+  <Accordion title="Two cards produced files with the same name">
+    **Cause:** Both cards began with the same first line of text. After sanitization and 50-character truncation, their derived filenames collided.
+
+    **Expected behavior:** This is handled automatically. The plugin maintains a `usedNames` set during Pass 1 and appends `_YYYYMMDDHHmm_N` (a timestamp plus an incrementing counter) to any name that has already been used:
+
+    ```typescript
+    while (usedNames.has(filename)) {
+        filename = `${shortName}_${timestamp}_${counter++}`;
+    }
+    ```
+
+    Both files are created successfully. You can rename them afterward — the `canvas_id` frontmatter field uniquely identifies each note's origin node.
+  </Accordion>
+
+  <Accordion title="Plugin seems to slow down or freeze Obsidian briefly after materialization">
+    **Cause:** Pass 4 of the materialization process calls `canvas.setData()` twice in sequence — first with an empty node list to clear the Canvas, then with the updated node list to repopulate it. A deliberate 100ms delay is inserted between the two calls:
+
+    ```typescript
+    currentCanvas.setData({ nodes: [], edges: allData.edges || [], groups: allData.groups || [] });
+
+    setTimeout(() => {
+        currentCanvas.setData({ nodes: updatedNodes, edges: allData.edges || [], groups: allData.groups || [] });
+        currentCanvas.requestSave();
+        // ...
+    }, 100);
+    ```
+
+    On large Canvases with many nodes, this double redraw can be briefly noticeable.
+
+    **Expected behavior:** This is by design. The two-phase update strategy ensures that converted text nodes are replaced by file nodes in the correct rendering order, preventing visual glitches such as nodes rendering on the wrong layer. The delay will be proportional to Canvas complexity but should resolve within a second.
+  </Accordion>
+
+</AccordionGroup>
+
+<Note>
+  If your problem is not listed here, please open a GitHub issue at [https://github.com/redsheep913/Canvas-Card-Materializer/issues](https://github.com/redsheep913/Canvas-Card-Materializer/issues). Include your Obsidian version, the plugin version, and — if possible — the developer console output (Ctrl+Shift+I) captured at the time of the issue.
+</Note>

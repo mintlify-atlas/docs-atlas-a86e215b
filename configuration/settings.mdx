@@ -1,0 +1,45 @@
+---
+title: "Configure Canvas Card-Materializer Settings"
+sidebarTitle: "Settings"
+description: "Canvas Card-Materializer has one configurable setting: the default export directory path used as a fallback for materialized files."
+---
+
+Canvas Card-Materializer exposes its settings through the standard Obsidian settings panel. To reach them, open **Obsidian Settings** (the gear icon in the bottom-left sidebar), scroll down to the **Community Plugins** section, and click the gear icon next to **Canvas Card-Materializer**. The plugin's settings panel will open in the right pane.
+
+## Available Settings
+
+<ParamField path="exportPath" type="string" default="Exports/Canvas">
+  Fallback directory path for exported Markdown files. Accepts vault-relative paths such as `Notes/Canvas` or `Projects/Materialized`.
+</ParamField>
+
+### Default Export Directory
+
+| Property | Value |
+|---|---|
+| Setting name | `Default Export Directory` |
+| Description shown in UI | `Fallback directory for exports.` |
+| Default value | `Exports/Canvas` |
+| Type | Text input |
+
+This setting defines the base directory the plugin falls back to when it cannot derive an output path from context. In practice, the plugin calculates the output path directly from the Canvas file's location: given a Canvas file at `Projects/Debug.canvas`, materialized files land under `Projects/Debug/<ColorFolder>/`. The **Default Export Directory** value is the configured fallback for cases where that path cannot be resolved.
+
+## How to Change the Setting
+
+<Steps>
+  <Step title="Open Obsidian Settings">
+    Click the gear icon in the bottom-left corner of the Obsidian window, or press `Ctrl+,` (Windows/Linux) / `Cmd+,` (macOS).
+  </Step>
+  <Step title="Navigate to Canvas Card-Materializer">
+    Scroll to the **Community Plugins** section in the left sidebar of the Settings panel, then click the gear icon to the right of **Canvas Card-Materializer**.
+  </Step>
+  <Step title="Edit the Default Export Directory field">
+    Locate the **Default Export Directory** text input and type your desired vault-relative path, for example `Notes/Materialized` or `Projects/Canvas-Exports`.
+  </Step>
+  <Step title="Your change is saved automatically">
+    The plugin calls Obsidian's `saveData` API on every keystroke via the field's `onChange` handler — no save button is required.
+  </Step>
+</Steps>
+
+<Note>
+  Settings are persisted by Obsidian's built-in `saveData` / `loadData` plugin API. The value is stored inside `.obsidian/plugins/canvas-card-materializer/data.json` in your vault. You can inspect or manually edit that file, but changes made while Obsidian is open may be overwritten by the next in-memory save.
+</Note>

@@ -1,0 +1,58 @@
+---
+title: "Canvas Color Code to Folder Name Reference"
+sidebarTitle: "Color Map"
+description: "Complete reference mapping Obsidian Canvas color codes 0–6 to the folder names Canvas Card-Materializer uses when organizing materialized files."
+---
+
+Canvas Card-Materializer uses a fixed mapping of Obsidian's internal color codes to human-readable folder names. This reference documents the complete mapping from the plugin source. When a card is materialized, its color code determines which subfolder the resulting Markdown file is placed in, nested under a folder named after the originating Canvas file.
+
+## Source Definition
+
+```typescript main.ts
+const colorFolderMap: { [key: string]: string } = {
+    "0": "Default",
+    "1": "Red",
+    "2": "Orange",
+    "3": "Yellow",
+    "4": "Blue",
+    "5": "Green",
+    "6": "Purple",
+};
+```
+
+## Color Code Reference Table
+
+| Color Code | Folder Name | Obsidian Canvas Color |
+|---|---|---|
+| 0 | Default | Grey / No color |
+| 1 | Red | Red |
+| 2 | Orange | Orange |
+| 3 | Yellow | Yellow |
+| 4 | Blue | Blue |
+| 5 | Green | Green |
+| 6 | Purple | Purple |
+
+## Default Color Handling
+
+If a card has no color set, `node.color` is `undefined` in the Canvas data model. The plugin handles this explicitly with the expression `node.color ? String(node.color) : "0"`, which causes all uncolored cards to be placed in the `Default` folder. The `canvas_color` frontmatter field in those files will be set to `"0"`.
+
+<Note>
+  Color codes not present in the map — for example, codes introduced by future Obsidian versions — fall back gracefully to `"Default"` via the `|| "Default"` fallback in the source: `colorFolderMap[nodeColor] || "Default"`. This means the plugin will never crash due to an unrecognized color; the file will simply land in the `Default` folder.
+</Note>
+
+## Folder Path Structure
+
+The color subfolder is always nested under a parent folder named after the Canvas file itself, which in turn lives alongside the Canvas file in the vault. For example, materializing cards from `Projects/Planning.canvas` produces paths like:
+
+```text
+Projects/
+└── Planning/
+    ├── Default/
+    ├── Red/
+    ├── Yellow/
+    └── Green/
+```
+
+<Tip>
+  You can assign semantic meaning to each color to keep your Canvas organized by category, priority, or status. See the [Color Workflow](/configuration/color-workflow) guide for recommended conventions and how to build a consistent color system across your Canvases.
+</Tip>

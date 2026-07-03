@@ -1,0 +1,43 @@
+---
+title: "Canvas Card-Materializer: Visual Thinking Meets Knowledge Management"
+sidebarTitle: "Introduction"
+description: "Canvas Card-Materializer is an Obsidian plugin that turns ephemeral Canvas text nodes into organized, interconnected Markdown files in one click."
+---
+
+Obsidian Canvas is a powerful space for brainstorming — but the cards you create there are ephemeral. They live only inside the `.canvas` file, invisible to search, impossible to link, and disconnected from your broader knowledge graph. **Canvas Card-Materializer** closes that gap. With a single right-click, it converts any selected Canvas text cards into permanent Markdown files, sorts them into color-coded folders, and rewires every arrow on your Canvas into `[[wikilink]]` backlinks inside each file — all without moving a single node on your board.
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Install from the Obsidian Community Plugins browser or manually via GitHub Releases.
+  </Card>
+  <Card title="Quickstart" icon="bolt" href="/quickstart">
+    Materialize your first Canvas cards into organized Markdown files in under a minute.
+  </Card>
+  <Card title="Materialization" icon="wand-magic-sparkles" href="/concepts/materialization">
+    Understand how text nodes become files, how filenames are derived, and what gets written to disk.
+  </Card>
+  <Card title="Settings" icon="gear" href="/configuration/settings">
+    Configure the default export directory and other plugin preferences.
+  </Card>
+</CardGroup>
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="Atomic Materialization" icon="file-circle-plus" href="/concepts/materialization">
+    Convert any Canvas text node into a physical `.md` file with one right-click. The original card on your board is seamlessly replaced by the newly created file node, keeping your layout perfectly intact.
+  </Card>
+  <Card title="Color Hierarchy" icon="folder-tree" href="/configuration/color-workflow">
+    Cards are automatically routed into sub-folders based on their Canvas color. Yellow cards land in `/Yellow`, green cards in `/Green`, uncolored cards in `/Default` — giving your vault an instant semantic structure.
+  </Card>
+  <Card title="Persistent Connections" icon="link" href="/concepts/connections">
+    Every arrow (edge) on the Canvas is preserved. The plugin appends a `Connected Nodes:` section to each materialized file, listing all linked notes as clickable `[[backlinks]]` so your graph view stays fully wired.
+  </Card>
+  <Card title="Visual Sync" icon="rotate" href="/usage/visual-sync">
+    Drag a materialized Markdown file back onto any Canvas and the plugin automatically reads its `canvas_color` frontmatter to restore the original card color — no manual re-coloring needed.
+  </Card>
+</CardGroup>
+
+<Note>
+  Canvas Card-Materializer requires **Obsidian 1.4.0 or higher**. Because `isDesktopOnly` is set to `false` in the plugin manifest, it is fully supported on both **desktop** (Windows, macOS, Linux) and **mobile** (iOS and Android) Obsidian clients.
+</Note>

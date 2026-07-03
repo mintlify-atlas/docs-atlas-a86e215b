@@ -1,0 +1,74 @@
+---
+title: "Preserving Canvas Connections as Markdown Backlinks"
+sidebarTitle: "Connections"
+description: "Canvas arrows between materialized nodes are converted into Connected Nodes backlink sections, keeping your knowledge graph intact after materialization."
+---
+
+Obsidian Canvas arrows (edges) carry semantic meaning — they show how ideas relate, how tasks depend on one another, or how a concept flows into another. When those cards are materialized into standalone Markdown files, simply creating the files would silently discard all of that relational structure. Canvas Card-Materializer preserves it by appending a `Connected Nodes:` section to each materialized file, translating visual arrows into Obsidian wikilinks that remain navigable long after you close the canvas.
+
+## The Connection Algorithm
+
+Connection processing happens across Passes 2 and 3 of the materialization workflow.
+
+**Pass 2 — Edge traversal:** After all files are created and recorded in `exportMap`, the plugin iterates over `canvas.edges` — a `Set<CanvasEdge>` exposed by Obsidian's internal Canvas API. Each `CanvasEdge` has the shape:
+
+```typescript
+interface CanvasEdge {
+    id: string;
+    from: { node: CanvasNode };
+    to: { node: CanvasNode };
+}
+```
+
+For each edge, the plugin checks whether both `edge.from.node.id` and `edge.to.node.id` are present in `exportMap`. If both endpoints were materialized in the current operation, it resolves the link text using Obsidian's metadata cache:
+
+```typescript
+const linkPath = app.metadataCache.fileToLinktext(
+    targetData.fileObj,       // the destination TFile
+    sourceData.fileObj.path   // the path of the source file
+);
+```
+
+`fileToLinktext()` produces the shortest unambiguous wikilink string for the destination file as seen from the source file — so `[[Sprint Goals]]` rather than a full vault-relative path, unless disambiguation is required. The result is wrapped in `[[...]]` and queued under the source node's ID in a `linkUpdates` map.
+
+**Pass 3 — Writing the section:** For each node that has at least one outgoing edge to another materialized node, the plugin reads the file content and appends the `Connected Nodes:` block:
+
+```typescript
+const linkSection = `\n\n---\n**Connected Nodes:**\n${links.map(l => `- ${l}`).join('\n')}`;
+await app.vault.modify(file, content + linkSection);
+```
+
+## Directionality
+
+Connections are **directional**. An arrow drawn *from* Node A *to* Node B produces a `Connected Nodes:` entry in **Node A's file** only. Node B's file does not automatically receive a reverse link. This mirrors the directionality of the original canvas arrow and gives you intentional, one-way references rather than automatic mutual backlinks.
+
+If you want bidirectional connections, draw arrows in both directions on the canvas before materializing.
+
+## What the Generated Section Looks Like
+
+A materialized note with outgoing connections will have a section appended at the end of its content that looks like this:
+
+```markdown
+---
+**Connected Nodes:**
+- [[Related-Note]]
+- [[Another-Note]]
+```
+
+The horizontal rule (`---`) visually separates the node's original content from the connection list. Each bullet is a standard Obsidian wikilink, meaning it appears in graph view, the backlinks panel of the target note, and is navigable with a click.
+
+<Note>
+Connections are only preserved between nodes that were **both selected and materialized in the same operation**. If Node A points to Node B but Node B was not part of the selection, the edge is silently ignored — no partial or broken link is written to Node A's file. To capture a connection, ensure both endpoints are selected before triggering "Materialize cards to files."
+</Note>
+
+<Warning>
+Re-materializing a card that already has a `Connected Nodes:` section will **not** duplicate it. Before appending, the plugin checks whether the string `**Connected Nodes:**` already exists in the file content:
+
+```typescript
+if (!content.includes("**Connected Nodes:**")) {
+    await app.vault.modify(file, content + linkSection);
+}
+```
+
+However, if the set of connections has changed since the first materialization (e.g., you added new arrows on the canvas), the existing section is not updated — it is simply left intact. To refresh connections, manually remove the old `Connected Nodes:` section before re-materializing.
+</Warning>

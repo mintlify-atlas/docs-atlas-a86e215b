@@ -1,0 +1,125 @@
+---
+title: "Visual Sync: Restoring Card Colors from Frontmatter"
+sidebarTitle: "Visual Sync"
+description: "When you drag a materialized Markdown file back onto an Obsidian Canvas, Canvas Card-Materializer automatically restores its original card color from frontmatter."
+---
+
+When you drag any Markdown file onto an Obsidian Canvas, Obsidian creates a plain grey file node — it has no way of knowing what color that card was on a previous Canvas. Visual Sync solves this: the plugin intercepts the moment a node is added, reads the `canvas_color` field from the file's YAML frontmatter, and immediately applies the correct color to the newly created node. The result is that moving materialized notes between Canvases (or re-opening them on the same Canvas) always restores their original visual context automatically.
+
+## How It Works
+
+### 1. Monkey-Patching `canvas.addNode`
+
+Obsidian does not expose a native event for when a node is added to a Canvas. To work around this, the plugin patches the `addNode` method on the Canvas prototype at runtime:
+
+```typescript
+canvasInstance.constructor.prototype.addNode = function (node: any) {
+    const result = originalFn!.apply(this, arguments);
+    pluginApp.workspace.trigger('canvas:node:added', this, node);
+    return result;
+};
+```
+
+The original `addNode` logic is preserved — `originalFn.apply(this, arguments)` runs first — and then a custom `canvas:node:added` workspace event is fired with the Canvas instance and the newly added node as arguments.
+
+### 2. Listening for the Custom Event
+
+The plugin registers a handler for `canvas:node:added` during `onload`:
+
+```typescript
+this.registerEvent(
+    this.app.workspace.on('canvas:node:added' as any, (canvas: any, node: CanvasNode) => {
+        setTimeout(async () => {
+            if (node.file instanceof TFile && node.file.extension === 'md') {
+                const fileCache = this.app.metadataCache.getFileCache(node.file);
+                const savedColor = fileCache?.frontmatter?.['canvas_color'];
+
+                if (savedColor !== undefined && savedColor !== null) {
+                    const colorStr = String(savedColor);
+
+                    if (typeof node.setAttributes === 'function') {
+                        node.setAttributes({ color: colorStr });
+                    } else {
+                        node.color = colorStr;
+                    }
+
+                    canvas.requestSave();
+                }
+            }
+        }, 150);
+    })
+);
+```
+
+The handler confirms that the added node is a `.md` file, then reads its metadata cache to find `canvas_color`. If the field exists, the color is applied via `node.setAttributes({ color: colorStr })` (with a fallback to direct property assignment for older Canvas API versions). Finally, `canvas.requestSave()` persists the color change to the `.canvas` file on disk.
+
+### 3. The 150 ms Delay
+
+The `setTimeout(..., 150)` delay is intentional. When a file node is first added to a Canvas, Obsidian's metadata cache may not yet have indexed that file's frontmatter. Waiting 150 ms gives the cache time to populate before the handler tries to read `canvas_color`.
+
+## Frontmatter Requirement
+
+Visual Sync only activates if the Markdown file contains a `canvas_color` field in its YAML frontmatter. Every file produced by the materialization step includes this field automatically:
+
+```yaml
+---
+canvas_id: abc123def456
+canvas_color: "3"
+---
+```
+
+- `canvas_id` stores the original Canvas node ID so the file can always be traced back to its source node.
+- `canvas_color` stores Obsidian's internal color identifier (a string from `"0"` to `"6"`) that maps to the color sub-folder names described in [Folder Structure](/usage/folder-structure).
+
+Files that were not created by this plugin — or files whose frontmatter does not include `canvas_color` — are ignored by the Visual Sync handler; their color is left unchanged.
+
+## Lazy Patch Application
+
+The monkey-patch is applied **lazily** rather than immediately at plugin load time, because the Canvas constructor is only accessible through a live Canvas instance:
+
+```typescript
+this.app.workspace.onLayoutReady(() => {
+    this.patchCanvasConstructor();
+});
+```
+
+Inside `patchCanvasConstructor()`, the plugin looks for any open Canvas leaf:
+
+- **If a Canvas leaf is found**, the patch is applied immediately to that Canvas's constructor prototype, which covers all Canvas instances in the session.
+- **If no Canvas leaf is open**, the plugin registers a temporary `layout-change` listener and retries as soon as a Canvas leaf appears. Once patched, the listener removes itself.
+
+```typescript
+private patchCanvasConstructor() {
+    if (this.patchedCanvas) return;
+    const leaves = this.app.workspace.getLeavesOfType('canvas');
+    if (leaves.length === 0) {
+        const eventRef = this.app.workspace.on('layout-change', () => {
+            const newLeaves = this.app.workspace.getLeavesOfType('canvas');
+            if (newLeaves.length > 0) {
+                this.app.workspace.offref(eventRef);
+                this.patchCanvasConstructor();
+            }
+        });
+        return;
+    }
+    // ... apply patch
+}
+```
+
+When the plugin unloads (`onunload`), the original `addNode` function is restored to the prototype, leaving no trace of the patch:
+
+```typescript
+async onunload() {
+    if (this.patchedCanvasConstructor && this.originalAddNode) {
+        this.patchedCanvasConstructor.prototype.addNode = this.originalAddNode;
+    }
+}
+```
+
+<Note>
+  Because the patch targets the Canvas constructor's **prototype**, it only needs to be applied once per session. All Canvas instances — whether open at startup or opened later — share the same prototype and therefore all benefit from the `canvas:node:added` event.
+</Note>
+
+<Tip>
+  If you reorganize your vault and move materialized files to new locations, dragging them back onto any Canvas will still restore their colors automatically — as long as the `canvas_color` frontmatter field is intact. No manual re-coloring or reconfiguration is needed.
+</Tip>

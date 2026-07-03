@@ -1,0 +1,61 @@
+---
+title: "Recommended Color Workflow for Canvas Card-Materializer"
+sidebarTitle: "Color Workflow"
+description: "Use Obsidian Canvas card colors semantically to auto-organize materialized notes by role: problems, theories, actions, and navigation maps."
+---
+
+Canvas Card-Materializer maps every card's color to a named subfolder when it materializes your selection. The color-to-folder mapping becomes most powerful when you assign a consistent semantic meaning to each color upfront, so the resulting vault structure mirrors the intent of your thinking rather than being an arbitrary pile of files. This page describes a recommended convention to get you started.
+
+## Color-to-Folder Reference
+
+The plugin reads the `color` property of each Canvas node (an integer string `"0"` through `"6"`) and routes the resulting Markdown file into the corresponding subfolder. The full mapping, together with the recommended semantic role for each color, is shown below.
+
+| Color | Obsidian Code | Folder | Role | Purpose |
+|---|---|---|---|---|
+| Grey (none) | `0` | `Default` | General | Uncategorized notes, drafts, hypotheses |
+| Red | `1` | `Red` | Critical | Blockers, urgent issues, hard failures |
+| Orange | `2` | `Orange` | Warning | Risks, watch items, degraded states |
+| Yellow | `3` | `Yellow` | Problem | Error codes, observed symptoms, current status |
+| Blue | `4` | `Blue` | Reference | Background reading, external sources, documentation links |
+| Green | `5` | `Green` | Action | Specific commands, configuration changes, checklists |
+| Purple | `6` | `Purple` | MOC | Indices, navigation cards, project overviews |
+
+## Practical Example: A Debugging Session
+
+Consider a Canvas where you are investigating a production bug. You create cards freely as you work, assigning colors by their role in the investigation:
+
+- **Yellow cards** — observed symptoms and raw error messages copied from logs
+- **Grey cards** — hypotheses about root causes, things to rule out
+- **Green cards** — exact commands you ran and configuration values you changed
+- **Purple card** — a master overview card that links to all the others and summarizes the current theory
+
+When you select all of these cards and run **Materialize cards to files**, the plugin creates the following structure in your vault (assuming the Canvas file is at `Projects/Debug.canvas`):
+
+```text
+Projects/Debug/
+├── Default/      ← Hypotheses and theories
+├── Yellow/       ← Observed symptoms and error messages
+├── Green/        ← Commands run and configuration changes
+└── Purple/       ← Overview / Map of Content
+```
+
+Each file is named after the first line of its card text. Cards that were connected by arrows on the Canvas gain a `**Connected Nodes:**` section at the bottom of their Markdown file containing `[[wikilinks]]` to their neighbors, so the navigational structure of the Canvas is fully preserved in the vault.
+
+## Frontmatter Written by the Plugin
+
+Every materialized file receives two frontmatter fields:
+
+```yaml
+canvas_id: "<node-id>"
+canvas_color: "<color-code>"
+```
+
+`canvas_color` stores the integer string (e.g., `"3"` for Yellow). When you drag a materialized file back onto a Canvas, the plugin reads this value and restores the card's color automatically, keeping your color convention intact across round-trips.
+
+<Tip>
+  You don't have to follow this convention. The plugin respects whatever color a card has at the moment you materialize it — the semantic mapping described here is a recommended starting point, not a requirement. Feel free to adopt a completely different color scheme that fits your own workflow.
+</Tip>
+
+<Info>
+  Color codes `1` through `6` correspond exactly to the six colors available in the Obsidian Canvas right-click context menu (the **Color** picker), in the same left-to-right order they appear in the UI: Red, Orange, Yellow, Blue, Green, Purple. Code `0` (or an absent `color` property) means no color has been assigned, which maps to the `Default` folder.
+</Info>

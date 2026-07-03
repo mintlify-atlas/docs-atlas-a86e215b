@@ -1,0 +1,79 @@
+{
+  "projectType": "general",
+  "projectName": "Canvas Card-Materializer",
+  "projectDescription": "An Obsidian plugin that converts Canvas text cards into permanent Markdown files, automatically organizing them by color into folders while preserving all visual connections as backlinks.",
+  "theme": "willow",
+  "primaryColor": "#7C3AED",
+  "lightColor": "#EDE9FE",
+  "darkColor": "#4C1D95",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/materialization",
+              "concepts/color-hierarchy",
+              "concepts/connections"
+            ]
+          },
+          {
+            "group": "Usage",
+            "pages": [
+              "usage/materializing-cards",
+              "usage/folder-structure",
+              "usage/visual-sync"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "configuration/settings",
+              "configuration/color-workflow"
+            ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "reference/metadata-fields",
+              "reference/color-map",
+              "reference/troubleshooting"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Atomic materialization of Canvas text nodes into .md files with a single right-click",
+    "Automatic folder hierarchy based on card color (Yellow, Grey, Green, Purple, etc.)",
+    "Persistent connection preservation — arrows become Connected Nodes backlink sections",
+    "Smart YAML frontmatter with canvas_id and canvas_color fields",
+    "Visual sync — dragging a materialized file back onto Canvas restores its original color",
+    "Clean filename sanitization removing Markdown headers, backticks, and illegal characters",
+    "Support for both single and multi-card selection via context menus"
+  ],
+  "publicApiSurface": [
+    "CanvasCardMaterializer (Plugin class, extends Obsidian Plugin)",
+    "CanvasCardMaterializerSettings.exportPath (string, default: 'Exports/Canvas')",
+    "exportSelectedNodes(canvas) — core materialization method",
+    "sanitizeFileName(name: string): string — filename sanitization utility",
+    "ensureFolderExists(path: string) — recursive folder creation",
+    "canvas:selection-menu event (multi-select context menu hook)",
+    "canvas:node-menu event (single-node context menu hook)",
+    "canvas:node:added event (monkey-patched for color sync on file drop)",
+    "colorFolderMap — maps color codes 0-6 to folder names (Default, Red, Orange, Yellow, Blue, Green, Purple)",
+    "YAML frontmatter fields: canvas_id, canvas_color",
+    "Connected Nodes section appended to materialized files"
+  ]
+}

@@ -1,0 +1,94 @@
+---
+title: "Understanding the Generated Folder Structure"
+sidebarTitle: "Folder Structure"
+description: "Canvas Card-Materializer creates a folder named after your Canvas, with color-named sub-folders containing the materialized Markdown files."
+---
+
+When you materialize cards, the plugin builds a folder hierarchy based on where your Canvas file lives and what color each card was. The root folder is always named after the Canvas file itself, and inside it each color maps to a dedicated sub-folder. This keeps your materialized notes organized by visual intent without any manual folder management.
+
+## Folder Path Formula
+
+```
+<canvas-parent-directory>/<canvas-basename>/<ColorFolder>/<filename>.md
+```
+
+- **`canvas-parent-directory`** — the directory that contains the `.canvas` file in your vault.
+- **`canvas-basename`** — the filename of the Canvas without the `.canvas` extension.
+- **`ColorFolder`** — a sub-folder named after the card's color (see the table below).
+- **`filename`** — the sanitized, deduplicated name derived from the card's first line.
+
+## Concrete Example
+
+Consider a Canvas saved at `Documents/Project-ASR.canvas` that contains cards of three different colors:
+
+```text
+Documents/
+└── Project-ASR/
+    ├── Default/        ← Grey/uncolored cards
+    │   └── Theory-Note.md
+    ├── Yellow/         ← Yellow cards
+    │   └── Bug-Analysis.md
+    └── Green/          ← Green cards
+        └── Command-List.md
+```
+
+The plugin derives the base folder path in code as:
+
+```typescript
+const canvasDir  = canvasFile.parent ? canvasFile.parent.path : "";
+const canvasName = canvasFile.basename;
+const baseFolderPath = canvasDir === "" ? canvasName : `${canvasDir}/${canvasName}`;
+```
+
+So for `Documents/Project-ASR.canvas`, `baseFolderPath` becomes `Documents/Project-ASR`, and a Yellow card is placed at `Documents/Project-ASR/Yellow/<filename>.md`.
+
+## Automatic Folder Creation
+
+You never need to create folders manually. Before writing each file the plugin calls `ensureFolderExists()`, which splits the full target path on `/` and walks each segment — creating any missing folder along the way via `vault.createFolder()`:
+
+```typescript
+async ensureFolderExists(path: string) {
+    const folders = path.replace(/\\/g, '/').replace(/^\/|\\/$/g, '').split('/');
+    let currentPath = '';
+    for (const folder of folders) {
+        currentPath = currentPath === '' ? folder : `${currentPath}/${folder}`;
+        if (!this.app.vault.getAbstractFileByPath(currentPath)) {
+            await this.app.vault.createFolder(currentPath);
+        }
+    }
+}
+```
+
+This means the full `Documents/Project-ASR/Yellow/` path is created in one shot, even if none of those folders existed before.
+
+## Vault Root Canvases
+
+If your Canvas file sits at the **vault root** (no parent directory), `canvasFile.parent.path` is an empty string. The plugin detects this and sets `baseFolderPath` to just the Canvas basename, so the color sub-folders are created directly at the vault root:
+
+```
+Project-ASR/
+├── Default/
+│   └── Theory-Note.md
+└── Yellow/
+    └── Bug-Analysis.md
+```
+
+## Color Sub-Folder Reference
+
+The plugin maps Obsidian's internal color identifiers to human-readable folder names using the following lookup:
+
+| Sub-Folder Name | Card Color | Obsidian Color ID |
+|---|---|---|
+| `Default` | Grey / no color | `0` |
+| `Red` | Red | `1` |
+| `Orange` | Orange | `2` |
+| `Yellow` | Yellow | `3` |
+| `Blue` | Blue | `4` |
+| `Green` | Green | `5` |
+| `Purple` | Purple | `6` |
+
+Any card whose color ID is not in this map also falls back to the `Default` folder.
+
+<Tip>
+  If you prefer all materialized notes to land in a dedicated area of your vault (e.g., `Areas/Canvas-Exports/`) rather than alongside your Canvas file, you can configure the **Default Export Directory** in the plugin's Settings tab. See [Settings](/configuration/settings) for details.
+</Tip>
