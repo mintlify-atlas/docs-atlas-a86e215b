@@ -1,7 +1,7 @@
 ---
-title: "Configure Canvas Card-Materializer Settings"
+title: "Canvas Card-Materializer Plugin Settings Reference"
 sidebarTitle: "Settings"
-description: "Canvas Card-Materializer has one configurable setting: the default export directory path used as a fallback for materialized files."
+description: "Canvas Card-Materializer has one configurable setting: the default export directory path. Learn what it stores and how it is currently used."
 ---
 
 Canvas Card-Materializer exposes its settings through the standard Obsidian settings panel. To reach them, open **Obsidian Settings** (the gear icon in the bottom-left sidebar), scroll down to the **Community Plugins** section, and click the gear icon next to **Canvas Card-Materializer**. The plugin's settings panel will open in the right pane.
@@ -9,7 +9,7 @@ Canvas Card-Materializer exposes its settings through the standard Obsidian sett
 ## Available Settings
 
 <ParamField path="exportPath" type="string" default="Exports/Canvas">
-  Fallback directory path for exported Markdown files. Accepts vault-relative paths such as `Notes/Canvas` or `Projects/Materialized`.
+  Stored directory path for exported Markdown files. Accepts vault-relative paths such as `Notes/Canvas` or `Projects/Materialized`. Note: the current implementation always derives the export path from the Canvas file's location and does not read this value at export time — see the note below.
 </ParamField>
 
 ### Default Export Directory
@@ -21,7 +21,7 @@ Canvas Card-Materializer exposes its settings through the standard Obsidian sett
 | Default value | `Exports/Canvas` |
 | Type | Text input |
 
-This setting defines the base directory the plugin falls back to when it cannot derive an output path from context. In practice, the plugin calculates the output path directly from the Canvas file's location: given a Canvas file at `Projects/Debug.canvas`, materialized files land under `Projects/Debug/<ColorFolder>/`. The **Default Export Directory** value is the configured fallback for cases where that path cannot be resolved.
+The plugin always calculates the output path directly from the Canvas file's location: given a Canvas file at `Projects/Debug.canvas`, materialized files land under `Projects/Debug/<ColorFolder>/`. The **Default Export Directory** value is saved to plugin data but is not read during the current export process — the implementation in `exportSelectedNodes()` derives the path exclusively from `canvasFile.parent.path` and `canvasFile.basename`. This setting is stored for potential future use as a true fallback.
 
 ## How to Change the Setting
 
@@ -41,5 +41,5 @@ This setting defines the base directory the plugin falls back to when it cannot 
 </Steps>
 
 <Note>
-  Settings are persisted by Obsidian's built-in `saveData` / `loadData` plugin API. The value is stored inside `.obsidian/plugins/canvas-card-materializer/data.json` in your vault. You can inspect or manually edit that file, but changes made while Obsidian is open may be overwritten by the next in-memory save.
+  Settings are persisted by Obsidian's built-in `saveData` / `loadData` plugin API. The value is stored inside `.obsidian/plugins/canvas-card-materializer/data.json` in your vault. You can inspect or manually edit that file, but changes made while Obsidian is open may be overwritten by the next in-memory save. Currently, the `exportPath` value is saved and loaded but is not used by the export logic — all export paths are derived from the Canvas file's location at the time of export.
 </Note>

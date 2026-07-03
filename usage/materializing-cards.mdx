@@ -1,5 +1,5 @@
 ---
-title: "Materializing Canvas Cards into Markdown Files"
+title: "How to Materialize Canvas Cards into Markdown Files"
 sidebarTitle: "Materializing Cards"
 description: "Step-by-step guide to converting Obsidian Canvas text nodes into permanent Markdown files using Canvas Card-Materializer's right-click context menu."
 ---
@@ -29,10 +29,10 @@ Materialization is the act of turning a temporary Canvas text card into a perman
 
 Once you confirm the action, the plugin runs through four internal passes:
 
-1. **File creation** — For each selected text node, a `.md` file is created inside a folder named after your Canvas, organized into a color sub-folder. The text node on the Canvas is replaced by a file node referencing the new file.
-2. **Edge resolution** — All Canvas arrows (edges) connecting materialized nodes are inspected and resolved into Obsidian wiki-links.
+1. **File creation** — For each selected text node, a `.md` file is created inside a folder named after your Canvas, organized into a color sub-folder. Pre-existing file nodes are registered in the export map but their files are left untouched.
+2. **Edge resolution** — All Canvas arrows (edges) connecting materialized nodes are inspected and the target paths are resolved into Obsidian wiki-link strings.
 3. **Frontmatter & backlinks** — Each file receives `canvas_id` and `canvas_color` entries in its YAML frontmatter. If a node had arrows connecting it to other materialized nodes, a **Connected Nodes** section is appended at the bottom of the file with a list of `[[backlinks]]`.
-4. **Canvas update** — The Canvas data is rewritten so that the original text nodes are replaced by file nodes, and a `canvas.requestSave()` call persists the change to disk.
+4. **Canvas update** — The Canvas data is rewritten so that the original text nodes are replaced by file nodes pointing to the newly created files, and a `canvas.requestSave()` call persists the change to disk.
 
 When all passes complete, a success notice appears:
 

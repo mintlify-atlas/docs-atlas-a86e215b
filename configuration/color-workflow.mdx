@@ -10,6 +10,10 @@ Canvas Card-Materializer maps every card's color to a named subfolder when it ma
 
 The plugin reads the `color` property of each Canvas node (an integer string `"0"` through `"6"`) and routes the resulting Markdown file into the corresponding subfolder. The full mapping, together with the recommended semantic role for each color, is shown below.
 
+<Note>
+  The color-to-folder mapping (`colorFolderMap`) is hardcoded in the plugin source and cannot be changed through the plugin's settings. There is no UI or configuration option to rename folders or reassign colors to different folder names.
+</Note>
+
 | Color | Obsidian Code | Folder | Role | Purpose |
 |---|---|---|---|---|
 | Grey (none) | `0` | `Default` | General | Uncategorized notes, drafts, hypotheses |

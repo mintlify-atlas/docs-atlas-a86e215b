@@ -1,5 +1,5 @@
 ---
-title: "Understanding the Generated Folder Structure"
+title: "Understanding the Canvas Folder Structure for Exports"
 sidebarTitle: "Folder Structure"
 description: "Canvas Card-Materializer creates a folder named after your Canvas, with color-named sub-folders containing the materialized Markdown files."
 ---
@@ -48,7 +48,7 @@ You never need to create folders manually. Before writing each file the plugin c
 
 ```typescript
 async ensureFolderExists(path: string) {
-    const folders = path.replace(/\\/g, '/').replace(/^\/|\\/$/g, '').split('/');
+    const folders = path.replace(/\\/g, '/').replace(/^\/|\/$/g, '').split('/');
     let currentPath = '';
     for (const folder of folders) {
         currentPath = currentPath === '' ? folder : `${currentPath}/${folder}`;

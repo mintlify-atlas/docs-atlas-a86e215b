@@ -30,9 +30,11 @@ Every materialized file lands at:
 <canvas-parent-dir>/<canvas-name>/<ColorFolder>/<filename>.md
 ```
 
+When the `.canvas` file sits at the vault root, there is no `<canvas-parent-dir>` segment and the path becomes `<canvas-name>/<ColorFolder>/<filename>.md`.
+
 | Segment | Source |
 |:---|:---|
-| `<canvas-parent-dir>` | The directory containing the `.canvas` file |
+| `<canvas-parent-dir>` | The directory containing the `.canvas` file (omitted when canvas is at vault root) |
 | `<canvas-name>` | The basename of the `.canvas` file (no extension) |
 | `<ColorFolder>` | The folder name from `colorFolderMap` matching the node's `color` value |
 | `<filename>.md` | The sanitized, truncated first line of the card's text |

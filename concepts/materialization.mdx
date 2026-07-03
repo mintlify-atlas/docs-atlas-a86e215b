@@ -1,7 +1,7 @@
 ---
 title: "What Is Materialization? Canvas Nodes to Markdown Files"
 sidebarTitle: "Materialization"
-description: "Materialization converts ephemeral Obsidian Canvas text nodes into permanent Markdown files, replacing the node with a file reference while preserving layout."
+description: "Materialization converts Canvas text nodes into permanent Markdown files, replacing each node with a file reference while preserving layout."
 ---
 
 Obsidian Canvas text nodes exist only as raw JSON entries inside a `.canvas` file. They have no independent presence in your vault — they can't be linked to, searched, tagged, or versioned as standalone notes. **Materialization** is the process of extracting those ephemeral text nodes into real `.md` files that live in your vault like any other note. Once materialized, a node becomes a first-class citizen: it can appear in graph view, receive backlinks, and be opened directly from the file explorer.
@@ -50,12 +50,12 @@ The plugin uses `canvas.getData()` to read the full canvas JSON, then maps over 
 - Nodes whose IDs are in `exportMap` and are still `type: text` are rewritten to `type: file`, with `file` set to the new `.md` path and `text` removed
 - All original position coordinates (`x`, `y`, `width`, `height`) are preserved via the spread operator (`...n`)
 
-The updated node list is pushed back with `canvas.setData()` in two steps (an empty flush followed by the full data 100 ms later) to avoid rendering glitches, then `canvas.requestSave()` persists the changes to disk without a full reload.
+The updated node list is pushed back with `canvas.setData()` in two steps: first a node-clearing flush (nodes set to `[]` while edges and groups are preserved) followed 100 ms later by the full updated node list, to avoid rendering glitches. `canvas.requestSave()` then persists the changes to disk without a full reload.
 
 <Note>
 After materialization, each converted node changes from `type: text` to `type: file` in the canvas JSON. The card still appears at exactly the same position in the visual layout, but it now references an actual vault file rather than storing raw text inline. You can double-click it to open the note in a new pane.
 </Note>
 
 <Tip>
-For multi-line cards, only the first line becomes the filename — everything after it becomes the body of the generated Markdown file. This means a card whose first line is a clear, descriptive heading (e.g., `## Project Goals`) will produce a well-named note, while its bullet points, paragraphs, or sub-headings flow naturally into the note body.
+For multi-line cards, the first line becomes the filename and all subsequent lines become the body of the generated Markdown file. For single-line cards, the full text is used as both the filename and the file body. This means a card whose first line is a clear, descriptive heading (e.g., `## Project Goals`) will produce a well-named note, while its bullet points, paragraphs, or sub-headings flow naturally into the note body.
 </Tip>

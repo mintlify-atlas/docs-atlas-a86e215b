@@ -1,7 +1,7 @@
 ---
 title: "Visual Sync: Restoring Card Colors from Frontmatter"
 sidebarTitle: "Visual Sync"
-description: "When you drag a materialized Markdown file back onto an Obsidian Canvas, Canvas Card-Materializer automatically restores its original card color from frontmatter."
+description: "When you drag a materialized file back onto a Canvas, Canvas Card-Materializer automatically restores its original card color from YAML frontmatter."
 ---
 
 When you drag any Markdown file onto an Obsidian Canvas, Obsidian creates a plain grey file node — it has no way of knowing what color that card was on a previous Canvas. Visual Sync solves this: the plugin intercepts the moment a node is added, reads the `canvas_color` field from the file's YAML frontmatter, and immediately applies the correct color to the newly created node. The result is that moving materialized notes between Canvases (or re-opening them on the same Canvas) always restores their original visual context automatically.
@@ -43,6 +43,10 @@ this.registerEvent(
                         node.color = colorStr;
                     }
 
+                    if (typeof (node as any).render === 'function') {
+                        (node as any).render();
+                    }
+
                     canvas.requestSave();
                 }
             }
@@ -51,7 +55,7 @@ this.registerEvent(
 );
 ```
 
-The handler confirms that the added node is a `.md` file, then reads its metadata cache to find `canvas_color`. If the field exists, the color is applied via `node.setAttributes({ color: colorStr })` (with a fallback to direct property assignment for older Canvas API versions). Finally, `canvas.requestSave()` persists the color change to the `.canvas` file on disk.
+The handler confirms that the added node is a `.md` file, then reads its metadata cache to find `canvas_color`. If the field exists, the color is applied via `node.setAttributes({ color: colorStr })` (with a fallback to direct property assignment for older Canvas API versions). If the node exposes a `render()` method, it is called immediately after to force a visual refresh. Finally, `canvas.requestSave()` persists the color change to the `.canvas` file on disk.
 
 ### 3. The 150 ms Delay
 
